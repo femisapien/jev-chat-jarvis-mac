@@ -2846,6 +2846,20 @@ def warn_if_no_generation_key() -> None:
 def main() -> None:
     app = AppKit.NSApplication.sharedApplication()
     app.setActivationPolicy_(AppKit.NSApplicationActivationPolicyAccessory)
+    # Accessory 模式下主菜单栏不显示，但 ⌘C/⌘V/⌘X/⌘A 的路由必须经过它：系统拿着
+    # 快捷键在主菜单里找挂对应动作的菜单项（⌘V → paste:），再沿响应链送达焦点
+    # 文本框。没有这一份隐藏菜单，设置窗口的密钥框/地址框全部无法粘贴（#145）。
+    # 菜单项刻意不设 target——设了就固定发给 self，不再沿响应链找焦点控件（与
+    # 状态栏菜单相反：那边的 action 是自己的方法，必须设）。
+    main_menu = AppKit.NSMenu.alloc().init()
+    edit_menu = AppKit.NSMenu.alloc().initWithTitle_("编辑")
+    for title, action, key in (("剪切", "cut:", "x"), ("复制", "copy:", "c"),
+                               ("粘贴", "paste:", "v"), ("全选", "selectAll:", "a")):
+        edit_menu.addItemWithTitle_action_keyEquivalent_(title, action, key)
+    main_menu.setSubmenu_forMenuItem_(
+        edit_menu, AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+            "编辑", None, ""))
+    app.setMainMenu_(main_menu)
     warn_if_no_generation_key()
     controller = HudController.alloc().init()
     # First line of every run: which backends are actually in play. Support requests
