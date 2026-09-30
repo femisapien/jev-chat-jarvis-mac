@@ -2852,13 +2852,14 @@ def main() -> None:
     # 菜单项刻意不设 target——设了就固定发给 self，不再沿响应链找焦点控件（与
     # 状态栏菜单相反：那边的 action 是自己的方法，必须设）。
     main_menu = AppKit.NSMenu.alloc().init()
+    edit_item = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+        "编辑", None, "")
     edit_menu = AppKit.NSMenu.alloc().initWithTitle_("编辑")
     for title, action, key in (("剪切", "cut:", "x"), ("复制", "copy:", "c"),
                                ("粘贴", "paste:", "v"), ("全选", "selectAll:", "a")):
         edit_menu.addItemWithTitle_action_keyEquivalent_(title, action, key)
-    main_menu.setSubmenu_forMenuItem_(
-        edit_menu, AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
-            "编辑", None, ""))
+    edit_item.setSubmenu_(edit_menu)
+    main_menu.addItem_(edit_item)
     app.setMainMenu_(main_menu)
     warn_if_no_generation_key()
     controller = HudController.alloc().init()
